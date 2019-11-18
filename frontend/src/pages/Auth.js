@@ -1,9 +1,13 @@
 import React, { useState } from "react";
 
+import AuthContext from "../context/auth-context";
+
 import "./Auth.css";
 
 function AuthPage() {
 	const [isLogin, setisLogin] = useState(true);
+
+	const Auth = React.useContext(AuthContext);
 
 	const emailRef = React.createRef();
 	const passwordRef = React.createRef();
@@ -52,12 +56,16 @@ function AuthPage() {
 			}
 		})
 			.then(response => {
-				if (response.status !== 200 && response.status !== 201)
-					throw new Error("Failed");
+				if (response.status !== 200 && response.status !== 201) throw new Error("Failed");
 
 				return response.json();
 			})
-			.then(data => console.log(data))
+			.then(data => {
+				if (data.data.login.token) {
+					Auth.login(data.data.login.token, data.data.login.userId, data.data.login.tokenExpiration);
+				}
+				console.log(data);
+			})
 			.catch(err => console.log(err));
 	};
 
