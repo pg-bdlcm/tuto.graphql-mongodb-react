@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 
 import Spinner from "../components/Spinner/Spinner";
+import BookingList from "../components/Bookings/BookingList/BookingList";
 
 import AuthContext from "../context/auth-context";
 
@@ -45,8 +46,46 @@ function BookingsPage() {
 				return response.json();
 			})
 			.then(data => {
-				const bookings = data.data.bookings;
-				setBookings(bookings);
+				setBookings(data.data.bookings);
+				setIsLoading(false);
+			})
+			.catch(err => {
+				console.log(err);
+				setIsLoading(false);
+			});
+	};
+
+	const onDelete = bookingId => {
+		setIsLoading(true);
+		/** GraphQL */
+		const requestBody = {
+			query: `
+				mutation {
+					cancelBooking(bookingId: "${bookingId}")
+						{
+							_id
+							title
+						}
+				}
+				`
+		};
+
+		fetch("http://localhost:4000/graphql", {
+			method: "POST",
+			body: JSON.stringify(requestBody),
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${Auth.token}`
+			}
+		})
+			.then(response => {
+				if (response.status !== 200 && response.status !== 201)
+					throw new Error("Failed");
+
+				return response.json();
+			})
+			.then(() => {
+				setBookings(bookings.filter(f => f._id !== bookingId));
 				setIsLoading(false);
 			})
 			.catch(err => {
@@ -62,16 +101,7 @@ function BookingsPage() {
 	return (
 		<React.Fragment>
 			{isLoading && <Spinner />}
-			{!isLoading && (
-				<ul>
-					{bookings.map((booking, key) => (
-						<div>
-							{booking.event.title} -{" "}
-							{new Date(booking.createdAt).toLocaleDateString()}
-						</div>
-					))}
-				</ul>
-			)}
+			{!isLoading && <BookingList bookings={bookings} onDelete={onDelete} />}
 		</React.Fragment>
 	);
 }
