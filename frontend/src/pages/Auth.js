@@ -23,29 +23,37 @@ function AuthPage() {
 		/**  */
 		let requestBody = {
 			query: `
-            query {
-                login(email: "${email}", password: "${password}"){
+            query Login($email: String!, $password: String!) {
+                login(email: $email, password: $password){
                     userId
                     token
                     tokenExpiration
                 }
             }
-            `
+            `,
+			variables: {
+				password,
+				email
+			}
 		};
 
 		if (!isLogin)
 			requestBody = {
 				query: `
-            mutation{
+            mutation CreateUser($email: String!, $password: String!) {
                 createUser(userInput: {
-                    email: "${email}"
-                    password: "${password}"
+                    email: $email
+                    password: $password
                 }){
                     _id
                     email
                 }
             }
-            `
+			`,
+				variables: {
+					password,
+					email
+				}
 			};
 
 		fetch("http://localhost:4000/graphql", {
@@ -56,15 +64,19 @@ function AuthPage() {
 			}
 		})
 			.then(response => {
-				if (response.status !== 200 && response.status !== 201) throw new Error("Failed");
+				if (response.status !== 200 && response.status !== 201)
+					throw new Error("Failed");
 
 				return response.json();
 			})
 			.then(data => {
 				if (data.data.login.token) {
-					Auth.login(data.data.login.token, data.data.login.userId, data.data.login.tokenExpiration);
+					Auth.login(
+						data.data.login.token,
+						data.data.login.userId,
+						data.data.login.tokenExpiration
+					);
 				}
-				console.log(data);
 			})
 			.catch(err => console.log(err));
 	};
