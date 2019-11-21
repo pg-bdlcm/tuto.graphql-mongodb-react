@@ -38,9 +38,6 @@ function EventsPage() {
 		)
 			return;
 
-		const event = { title, price, date, description };
-		console.log(event);
-
 		/** GraphQL */
 		const requestBody = {
 			query: `
